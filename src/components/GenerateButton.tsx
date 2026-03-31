@@ -6,10 +6,11 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import Constants from "expo-constants";
 import { useStridoStore } from "../stores/useStridoStore";
 import { generateCircuit } from "../core/circuit-generator";
 import { MIN_STEPS, MAX_STEPS } from "../core/constants";
+
+const ORS_API_KEY = process.env.EXPO_PUBLIC_ORS_API_KEY ?? "";
 
 export function GenerateButton() {
   const userLocation = useStridoStore((s) => s.userLocation);
@@ -25,31 +26,27 @@ export function GenerateButton() {
     if (!userLocation) {
       Alert.alert(
         "Position introuvable",
-        "Impossible de determiner votre position. Verifiez vos parametres de localisation."
+        "Impossible de déterminer votre position. Vérifiez vos paramètres de localisation."
       );
       return;
     }
 
     if (targetSteps < MIN_STEPS) {
-      Alert.alert("Trop peu de pas", `Minimum ${MIN_STEPS} pas pour generer un circuit.`);
+      Alert.alert("Trop peu de pas", `Minimum ${MIN_STEPS} pas pour générer un circuit.`);
       return;
     }
 
     if (targetSteps > MAX_STEPS) {
       Alert.alert(
         "Trop de pas",
-        `Maximum ${MAX_STEPS.toLocaleString("fr-FR")} pas, ca fait quand meme ${Math.round((targetSteps * settings.stepLengthCm) / 100000)} km !`
+        `Maximum ${MAX_STEPS.toLocaleString("fr-FR")} pas, ça fait quand même ${Math.round((targetSteps * settings.stepLengthCm) / 100000)} km !`
       );
       return;
     }
 
-    const apiKey = Constants.expoConfig?.extra?.orsApiKey
-      ?? process.env.EXPO_PUBLIC_ORS_API_KEY
-      ?? "";
-
-    if (!apiKey) {
+    if (!ORS_API_KEY) {
       Alert.alert(
-        "Cle API manquante",
+        "Clé API manquante",
         "Configurez EXPO_PUBLIC_ORS_API_KEY dans votre fichier .env"
       );
       return;
@@ -64,7 +61,7 @@ export function GenerateButton() {
         userLocation,
         targetSteps,
         stepLengthM,
-        apiKey
+        ORS_API_KEY
       );
       setCircuit(result);
     } catch (error: unknown) {
@@ -73,7 +70,7 @@ export function GenerateButton() {
 
       if (message.includes("No route found")) {
         setCircuitError(
-          "Aucun circuit trouve dans cette zone. Essayez de vous deplacer."
+          "Aucun circuit trouvé dans cette zone. Essayez de vous déplacer."
         );
       } else {
         setCircuitError(`Erreur : ${message}`);
@@ -98,7 +95,7 @@ export function GenerateButton() {
         <ActivityIndicator color="#FFFFFF" size="small" />
       ) : (
         <Text style={styles.buttonText}>
-          {circuit ? "Regenerer le circuit" : "Generer un circuit"}
+          {circuit ? "Régénérer le circuit" : "Générer un circuit"}
         </Text>
       )}
     </TouchableOpacity>
